@@ -80,7 +80,7 @@ wss.on('connection', (ws) => {
 
       switch (msg.type) {
         case 'join':
-          if (roomList.rooms[roomId] === 'undefined') {
+          if (!roomList.rooms[roomId]) {
             console.log('Room not ready');
             return;
           }
