@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const roomId = "7d148ded-56bb";
+const roomId = "6ef1c851-9c1e";
 const playerName = "Zombie";
 const host = "ws://localhost:3000";
 const ws = new WebSocket(host);

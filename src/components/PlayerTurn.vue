@@ -3,6 +3,7 @@
     <span class="text">Player's Turn</span>
     <div>
       <span class="player_name">{{ playerName }}</span>
+      <button v-on:click="start" v-if="isReadyToStart">Start Game</button>
     </div>
   </div>
 </template>
@@ -14,12 +15,27 @@ export default {
     playerName: {
       type: String,
       default: () => ""
+    },
+    isReadyToStart: null
+  },
+  methods: {
+    start() {
+      this.$parent.startGame();
+    }
+  },
+  watch: {
+    isReadyToStart: function() {
+      if (!this.isReadyToStart) {
+        return true;
+      }
+
+      return false;
     }
   }
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .player_turn {
   color: #fff;
   justify-content: space-between;
@@ -42,5 +58,6 @@ export default {
 .player_name {
   color: royalblue;
   font: bold 24px / 1.4 arial;
+  margin-right: 20px;
 }
 </style>

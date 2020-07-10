@@ -116,7 +116,7 @@ export default {
   height: 100%;
 }
 .card__front {
-  background: linear-gradient(45deg, #222, rgb(200, 39, 92));
+  background: linear-gradient(0deg, #222, rgb(200, 39, 92));
   z-index: 2;
 }
 .card__back {

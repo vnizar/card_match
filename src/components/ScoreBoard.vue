@@ -1,9 +1,9 @@
 <template>
   <div class="scoreboard">
     <div class="scoreboard__board">
-      <span class="text">Player {{ playerName }}</span>
+      <span class="text">{{ playerName }}</span>
       <div>
-        <span class="score">{{ matchCount }}</span>
+        <span class="score" v-if="playerName">{{ matchCount }}</span>
       </div>
     </div>
   </div>
@@ -19,7 +19,7 @@ export default {
     },
     playerName: {
       type: String,
-      default: () => ""
+      default: () => "Player"
     }
   },
   computed: {
@@ -71,5 +71,8 @@ export default {
 }
 .turn--match {
   background: rgb(30, 255, 255);
+}
+.score {
+  font-size: 24pt;
 }
 </style>

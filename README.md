@@ -27,9 +27,10 @@ Once you set the `roomId`, you can run the client code.
 ```
 
 ### How to play
-Once 2 players joined in a room, the game will begin automatically, first turn will always Player 1, and will change to Player 2 after Player 1 pick 2 cards.  
+Once 2 players joined in a room, the game will show start button, first turn will always Player 1, and will change to Player 2 after Player 1 pick 2 cards.  
 Everytime a player pick a card, the server will send `info` event to both players, so they can **see** the flipped card's data.   
 You just need to change the code on `info` and `turn` event, you can see the comments on both events with example.
+The time limit is set to 10 minutes.
 
 ### Credits
 This project is modified version of https://github.com/jmuspratt/memory-vue by add websocket and change assets with playing cards from http://acbl.mybigcommerce.com/52-playing-cards/.

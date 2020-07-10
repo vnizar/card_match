@@ -5,8 +5,9 @@
     </section>
     <section class="score-grid">
       <ScoreBoard :score="scorePlayer1" :playerName="playerOne.name" @reset="reset" />
-      <PlayerTurn :playerName="playerTurn.name" />
       <ScoreBoard :score="scorePlayer2" :playerName="playerTwo.name" @reset="reset" />
+      <PlayerTurn :playerName="playerTurn.name" :isReadyToStart="isReadyToStart" />
+      <Timer :isStart="isStartTimer" :time="time" />
     </section>
   </div>
 </template>
@@ -15,6 +16,7 @@
 import Card from "./components/Card.vue";
 import ScoreBoard from "./components/ScoreBoard.vue";
 import PlayerTurn from "./components/PlayerTurn.vue";
+import Timer from "./components/Timer.vue";
 import ws from "./utils/ws";
 
 const shapes = [
@@ -28,6 +30,8 @@ const shapes = [
   "six",
   "seven"
 ];
+
+const watchRoom = new URL(location.href).searchParams.get("watch");
 
 const cards = [];
 
@@ -60,6 +64,8 @@ function initState() {
   shuffle(cards);
 
   return {
+    time: 10 * 60 * 1000, // set your time limit here
+    isReadyToStart: false,
     flipsThisTurn: 0,
     theCards: cards,
     firstFlipID: null,
@@ -78,7 +84,8 @@ function initState() {
     },
     scorePlayer1: [],
     scorePlayer2: [],
-    roomId: null
+    roomId: null,
+    isStartTimer: false
   };
 }
 
@@ -87,7 +94,8 @@ export default {
   components: {
     Card,
     ScoreBoard,
-    PlayerTurn
+    PlayerTurn,
+    Timer
   },
 
   data() {
@@ -103,13 +111,34 @@ export default {
       setTimeout(() => {
         switch (message.type) {
           case "create": {
-            this.roomId = message.clientId;
-            let roomData = {
-              from: "dealer",
-              type: "room",
-              clientId: message.clientId
-            };
-            ws.send(JSON.stringify(roomData));
+            var data = {};
+            if (watchRoom != null) {
+              data = {
+                from: "dealer",
+                type: "watch",
+                room: watchRoom,
+                clientId: message.clientId,
+                players: {
+                  playerOne: {
+                    data: this.playerOne,
+                    score: this.scorePlayer1
+                  },
+                  playerTwo: {
+                    data: this.playerTwo,
+                    score: this.scorePlayer2
+                  }
+                }
+              };
+            } else {
+              this.roomId = message.clientId;
+              data = {
+                from: "dealer",
+                type: "room",
+                clientId: message.clientId,
+                cards: this.theCards
+              };
+            }
+            ws.send(JSON.stringify(data));
             break;
           }
           case "room":
@@ -126,22 +155,30 @@ export default {
                 id: message.clientId,
                 name: message.playerName
               };
-              let playerData = {
-                from: "dealer",
-                type: "turn",
-                turn: this.flipsThisTurn,
-                lastPlayer: this.playerOne.id,
-                currentPlayer: this.playerOne.id,
-                room: this.roomId
-              };
-              this.playerTurn = this.playerOne;
-              ws.send(JSON.stringify(playerData));
+              this.isReadyToStart = true;
             }
             break;
           case "pick":
-            if (this.playerTurn.id === message.clientId) {
+            if (this.playerTurn && this.playerTurn.id === message.clientId) {
               this.cardTapped(message.cardPos);
             }
+            break;
+          case "info":
+            this.theCards = message.cards;
+            this.scorePlayer1 = message.scores[0];
+            this.scorePlayer2 = message.scores[1];
+            break;
+          case "watch":
+            this.theCards = message.cards;
+            this.theCards.forEach(item => (item.flipped = false));
+            this.playerOne = message.players[0];
+            this.playerTwo = message.players[1];
+            this.scorePlayer1 = message.scores[0];
+            this.scorePlayer2 = message.scores[1];
+            this.playerTurn = message.playerTurn;
+            this.flipsThisTurn = message.flipsThisTurn;
+            this.firstFlipID = message.firstFlipID;
+            this.firstFlipMatchKey = message.firstFlipMatchKey;
             break;
         }
       }, 2000);
@@ -156,18 +193,32 @@ export default {
 
   methods: {
     sendDataInfo(carId, cardPos) {
+      if (watchRoom) {
+        return;
+      }
+
       let dataFlip = {
         from: "dealer",
         type: "info",
         room: this.roomId,
         cardId: carId,
         lastTurn: this.playerTurn.id,
-        openedCardPos: cardPos
+        openedCardPos: cardPos,
+        scores: [this.scorePlayer1, this.scorePlayer2],
+        playerTurn: this.playerTurn,
+        flipsThisTurn: this.flipsThisTurn,
+        firstFlipID: this.firstFlipID,
+        firstFlipMatchKey: this.firstFlipMatchKey,
+        cards: this.theCards
       };
       ws.send(JSON.stringify(dataFlip));
     },
 
     sendDataTurn() {
+      if (watchRoom) {
+        return;
+      }
+
       let dataTurn = {
         from: "dealer",
         type: "turn",
@@ -181,6 +232,9 @@ export default {
     },
 
     incrementFlipsThisTurn() {
+      if (this.flipsThisTurn > 2) {
+        this.flipsThisTurn = 0;
+      }
       this.flipsThisTurn++;
     },
 
@@ -234,6 +288,14 @@ export default {
           this.flipCard(tappedCard.id);
           this.flipCard(this.firstFlipID);
         }
+
+        if (
+          watchRoom &&
+          this.theCards.filter(item => item.flipped).length > 0
+        ) {
+          this.theCards.forEach(item => (item.flipped = false));
+        }
+
         this.flipsThisTurn = 0;
         this.switchPlayer();
       }, 1000);
@@ -263,6 +325,25 @@ export default {
       );
       // update cards
       this.theCards = newCards;
+    },
+
+    stopGame() {
+      ws.close();
+    },
+
+    startGame() {
+      let playerData = {
+        from: "dealer",
+        type: "turn",
+        turn: this.flipsThisTurn,
+        lastPlayer: this.playerOne.id,
+        currentPlayer: this.playerOne.id,
+        room: this.roomId
+      };
+      this.playerTurn = this.playerOne;
+      ws.send(JSON.stringify(playerData));
+      this.isStartTimer = true;
+      this.isReadyToStart = false;
     },
 
     reset() {
@@ -323,6 +404,6 @@ body {
 .score-grid {
   list-style: none;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 </style>
