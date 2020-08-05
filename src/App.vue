@@ -7,7 +7,7 @@
       <ScoreBoard :score="scorePlayer1" :playerName="playerOne.name" @reset="reset" />
       <ScoreBoard :score="scorePlayer2" :playerName="playerTwo.name" @reset="reset" />
       <PlayerTurn :playerName="playerTurn.name" :isReadyToStart="isReadyToStart" />
-      <Timer :isStart="isStartTimer" :time="time" />
+      <Timer :isStart="isStartTimer"/>
     </section>
   </div>
 </template>
@@ -31,7 +31,7 @@ const shapes = [
   "seven"
 ];
 
-const watchRoom = new URL(location.href).searchParams.get("watch");
+const watchRoom = new URL(location.href).searchParams.get('watch');
 
 const cards = [];
 
@@ -64,7 +64,6 @@ function initState() {
   shuffle(cards);
 
   return {
-    time: 10 * 60 * 1000, // set your time limit here
     isReadyToStart: false,
     flipsThisTurn: 0,
     theCards: cards,
@@ -112,7 +111,7 @@ export default {
         switch (message.type) {
           case "create": {
             var data = {};
-            if (watchRoom != null) {
+            if(watchRoom != null){
               data = {
                 from: "dealer",
                 type: "watch",
@@ -128,7 +127,7 @@ export default {
                     score: this.scorePlayer2
                   }
                 }
-              };
+              }
             } else {
               this.roomId = message.clientId;
               data = {
@@ -170,7 +169,7 @@ export default {
             break;
           case "watch":
             this.theCards = message.cards;
-            this.theCards.forEach(item => (item.flipped = false));
+            this.theCards.forEach(item => item.flipped = false);
             this.playerOne = message.players[0];
             this.playerTwo = message.players[1];
             this.scorePlayer1 = message.scores[0];
@@ -193,8 +192,8 @@ export default {
 
   methods: {
     sendDataInfo(carId, cardPos) {
-      if (watchRoom) {
-        return;
+      if(watchRoom) {
+        return
       }
 
       let dataFlip = {
@@ -215,8 +214,8 @@ export default {
     },
 
     sendDataTurn() {
-      if (watchRoom) {
-        return;
+      if(watchRoom) {
+        return
       }
 
       let dataTurn = {
@@ -232,7 +231,7 @@ export default {
     },
 
     incrementFlipsThisTurn() {
-      if (this.flipsThisTurn > 2) {
+      if(this.flipsThisTurn > 2) {
         this.flipsThisTurn = 0;
       }
       this.flipsThisTurn++;
@@ -246,8 +245,8 @@ export default {
 
       if (this.flipsThisTurn === 1) {
         this.runTurn1(tappedCard);
-
         this.sendDataInfo(tappedCard.id, cardPos);
+        this.sendDataTurn();
       }
       if (this.flipsThisTurn === 2) {
         this.runTurn2(tappedCard);
@@ -262,8 +261,6 @@ export default {
 
       this.firstFlipID = tappedCard.id;
       this.firstFlipMatchKey = tappedCard.matchKey;
-
-      this.sendDataTurn();
     },
 
     runTurn2(tappedCard) {
@@ -273,8 +270,9 @@ export default {
     checkMatch(tappedCard) {
       setTimeout(() => {
         if (
-          tappedCard.matchKey === this.firstFlipMatchKey &&
-          this.firstFlipID != tappedCard.id
+          tappedCard.matchKey === this.firstFlipMatchKey 
+          && this.firstFlipID != tappedCard.id
+          && !tappedCard.matched
         ) {
           const newCards = this.theCards.map(card =>
             [tappedCard.id, this.firstFlipID].includes(card.id)
@@ -289,11 +287,8 @@ export default {
           this.flipCard(this.firstFlipID);
         }
 
-        if (
-          watchRoom &&
-          this.theCards.filter(item => item.flipped).length > 0
-        ) {
-          this.theCards.forEach(item => (item.flipped = false));
+        if(watchRoom && this.theCards.filter(item => item.flipped).length > 0) {
+          this.theCards.forEach(item => item.flipped = false);
         }
 
         this.flipsThisTurn = 0;
@@ -343,7 +338,6 @@ export default {
       this.playerTurn = this.playerOne;
       ws.send(JSON.stringify(playerData));
       this.isStartTimer = true;
-      this.isReadyToStart = false;
     },
 
     reset() {
