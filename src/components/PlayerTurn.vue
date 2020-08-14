@@ -2,7 +2,7 @@
   <div class="player_turn">
     <span class="text">Player's Turn</span>
     <div>
-      <span class="player_name">{{ playerName }}</span>
+      <span class="player_name" :style="{'color': color}">{{ playerName }}</span>
       <button v-on:click="start" v-if="isReadyToStart">Start Game</button>
     </div>
   </div>
@@ -16,7 +16,11 @@ export default {
       type: String,
       default: () => ""
     },
-    isReadyToStart: null
+    isReadyToStart: null,
+    color: {
+      type: String,
+      default: () => "yellow"
+    }
   },
   methods: {
     start() {

@@ -46,6 +46,10 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (data) => {
     let msg = JSON.parse(data);
+    if (msg.type == 'ping') {
+      return;
+    }
+
     if (msg.from === 'dealer') {
       switch (msg.type) {
         case 'room':
@@ -109,5 +113,5 @@ wss.on('connection', (ws) => {
     }
   });
 
-  ws.on('close', () => console.log('Client disconnected'));
+  ws.on('close', () => console.log('Client disconnected : ' + ws.id));
 });

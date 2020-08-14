@@ -6,7 +6,7 @@
     <section class="score-grid">
       <ScoreBoard :score="scorePlayer1" :playerName="playerOne.name" @reset="reset" />
       <ScoreBoard :score="scorePlayer2" :playerName="playerTwo.name" @reset="reset" />
-      <PlayerTurn :playerName="playerTurn.name" :isReadyToStart="isReadyToStart" />
+      <PlayerTurn :playerName="playerTurn.name" :isReadyToStart="isReadyToStart" :color="playerTurn.color" />
       <Timer :isStart="isStartTimer"/>
     </section>
   </div>
@@ -79,7 +79,8 @@ function initState() {
     },
     playerTurn: {
       id: null,
-      name: null
+      name: null,
+      color: "yellow"
     },
     scorePlayer1: [],
     scorePlayer2: [],
@@ -102,6 +103,12 @@ export default {
   },
 
   created() {
+    setInterval(() => {
+      let pingData = {
+        type: "ping"
+      }
+      ws.send(JSON.stringify(pingData));
+    }, 3000);
     ws.onclose = () => {
       console.log("Disconnected");
     };
@@ -307,8 +314,10 @@ export default {
     switchPlayer() {
       if (this.playerTurn.id === this.playerOne.id) {
         this.playerTurn = this.playerTwo;
+        this.playerTurn.color = "green";
       } else {
         this.playerTurn = this.playerOne;
+        this.playerTurn.color = "yellow";
       }
 
       this.sendDataTurn();
