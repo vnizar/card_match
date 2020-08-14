@@ -22,7 +22,7 @@ export default {
     isStart: null,
     time: {
       type: Number,
-      default: () => 0
+      default: () => 5 * 60 *1000
     }
   },
   methods: {
