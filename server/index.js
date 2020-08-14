@@ -98,6 +98,8 @@ wss.on('connection', (ws) => {
 
           if (roomList.rooms[roomId] != undefined && roomLength < 2) {
             roomList.rooms[roomId].push(clientId);
+            console.log('Player 1 :'+roomList.rooms[roomId][0]);
+            console.log('Player 2 :'+roomList.rooms[roomId][0]);
             sendToRoom(roomId, joinData);
           }
           break;

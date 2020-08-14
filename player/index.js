@@ -1,8 +1,8 @@
 const WebSocket = require('ws');
 
-const roomId = "6ef1c851-9c1e";
+const roomId = process.env.ROOM_ID;
 const playerName = "Zombie";
-const host = "ws://localhost:3000";
+const host = process.env.HOST_URL;
 const ws = new WebSocket(host);
 
 let dataJoin = (data) => {
